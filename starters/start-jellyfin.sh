@@ -1,16 +1,4 @@
 #!/bin/bash
-
-#!/bin/bash
-
-# Refuser de s'exécuter en root
-if [ "$EUID" -eq 0 ]; then
-    echo "❌ Ce script ne doit pas être exécuté en root!"
-    echo "Relancement en tant que michel..."
-    exec su - michel -c "$0 $@"
-    exit 1
-fi
-
-
 LOG_FILE="/tmp/startup-logs/jellyfin-$(date +%Y%m%d-%H%M%S).log"
 
 log() {
@@ -30,11 +18,16 @@ if ! mount | grep -q "/Users/michel/media-pool"; then
 fi
 
 log "Démarrage..."
-export DOTNET_SYSTEM_IO_DISABLEFILELOCKING=1
-export HOME=/Users/michel
 
-cd /Applications/Jellyfin.app/Contents/MacOS
-./jellyfin --webdir /Applications/Jellyfin.app/Contents/Resources/jellyfin-web >> "$LOG_FILE" 2>&1 &
+# Si on est root, lancer en tant que michel
+if [ "$EUID" -eq 0 ]; then
+    su - michel -c "export DOTNET_SYSTEM_IO_DISABLEFILELOCKING=1 && cd /Applications/Jellyfin.app/Contents/MacOS && ./jellyfin --webdir /Applications/Jellyfin.app/Contents/Resources/jellyfin-web" >> "$LOG_FILE" 2>&1 &
+else
+    # Sinon lancer directement
+    export DOTNET_SYSTEM_IO_DISABLEFILELOCKING=1
+    cd /Applications/Jellyfin.app/Contents/MacOS
+    ./jellyfin --webdir /Applications/Jellyfin.app/Contents/Resources/jellyfin-web >> "$LOG_FILE" 2>&1 &
+fi
 
 sleep 5
 if curl -s http://localhost:8096 > /dev/null; then

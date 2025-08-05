@@ -60,7 +60,17 @@ log "--- SERVICES ---"
 wait_for_service "Jellyfin" "curl -s http://localhost:8096" 30
 
 "$SCRIPT_DIR/starters/start-immich.sh" 2>&1 | tee -a "$LOG_FILE" &
-wait_for_service "Immich API" "curl -s http://localhost:2283/api/server/ping | grep pong" 60
+wait_for_service "Immich ML" "curl -s http://localhost:3003/ping || curl -s http://localhost:3003/docs | grep -q FastAPI" 30
+
+# Attendre API
+wait_for_service "Immich API" "curl -s http://localhost:2283/api/server/ping | grep -q pong" 60
+
+# Attendre Web
+wait_for_service "Immich Web" "curl -s http://localhost:3000" 30
+
+# Attendre Microservices (optionnel, pas de endpoint direct)
+
+log "✓ Immich complet"
 
 
 "$SCRIPT_DIR/starters/start-flask.sh" 2>&1 | tee -a "$LOG_FILE" &

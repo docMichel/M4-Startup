@@ -1,6 +1,11 @@
 #!/bin/bash
 # Script master qui lance tous les services
 
+# Configuration globale
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export HOME=/Users/michel
+
+
 LOG_DIR="/tmp/startup-logs"
 LOG_FILE="$LOG_DIR/startup-all-$(date +%Y%m%d-%H%M%S).log"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

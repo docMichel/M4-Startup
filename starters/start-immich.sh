@@ -22,18 +22,18 @@ if ! mount | grep -q "/Users/michel/mnt/immich-hub"; then
     exit 1
 fi
 
-# Démarrer Redis si nécessaire
+# Démarrer Redis directement (pas brew services)
 if ! redis-cli ping > /dev/null 2>&1; then
     log "Démarrage Redis..."
-    brew services start redis
+    su - michel -c "/opt/homebrew/opt/redis/bin/redis-server /opt/homebrew/etc/redis.conf" >> "$LOG_FILE" 2>&1 &
     sleep 2
 fi
 
-# Démarrer PostgreSQL si nécessaire
-if ! pg_isready > /dev/null 2>&1; then
+# Démarrer PostgreSQL directement (pas brew services)
+if ! su - michel -c "pg_isready" > /dev/null 2>&1; then
     log "Démarrage PostgreSQL..."
-    brew services start postgresql@14
-    sleep 3
+    su - michel -c "/opt/homebrew/opt/postgresql@14/bin/postgres -D /opt/homebrew/var/postgresql@14" >> "$LOG_FILE" 2>&1 &
+    sleep 5
 fi
 
 # Vérifier/créer lien symbolique

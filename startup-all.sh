@@ -50,7 +50,7 @@ log "--- MONTAGES ---"
 sleep 5
 log "--- OLLAMA ---"
 "$SCRIPT_DIR/starters/start-ollama.sh" 2>&1 | tee -a "$LOG_FILE" &
-wait_for_service "Flask" "curl -s http://localhost:5000/api/health" 30
+wait_for_service "Ollama" "curl -s http://localhost:11434/api/tags" 30
 
 
 # 3. Lancer les services

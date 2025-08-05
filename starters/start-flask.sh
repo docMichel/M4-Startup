@@ -40,10 +40,38 @@ log "Python version: $(python --version)"
 # Maintenant lancer avec le python activé
 python src/caption_server.py >> "$LOG_FILE" 2>&1 &
 
+# Dans start-flask.sh, après le lancement
+log "Attente du démarrage de Flask..."
+FLASK_OK=0
+for i in {1..20}; do
+    if curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
+        log "✓ Flask OK après ${i}s"
+        FLASK_OK=1
+        break
+    fi
+    sleep 1
+done
 
-sleep 5
-if curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
-    log "✓ Flask OK sur http://localhost:5000"
-else
-    log "✗ Flask ne répond pas"
+if [ $FLASK_OK -eq 0 ]; then
+    log "✗ Flask ne répond toujours pas après 20s"
+    log "Vérification du processus..."
+    
+    if pgrep -f caption_server.py > /dev/null; then
+        log "Le processus tourne mais ne répond pas"
+        log "Dernières lignes du log:"
+        tail -10 "$LOG_FILE"
+    else
+        log "Le processus Flask est mort"
+        log "Tentative de redémarrage..."
+        cd /Users/michel/caption-maker
+        source venv/bin/activate
+        python src/caption_server.py >> "$LOG_FILE" 2>&1 &
+        sleep 10
+        
+        if curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
+            log "✓ Flask OK après redémarrage"
+        else
+            log "✗ Flask KO définitivement - voir $LOG_FILE"
+        fi
+    fi
 fi

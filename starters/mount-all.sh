@@ -5,12 +5,31 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] MOUNT: $1" | tee -a "$LOG_FILE"
 }
 
+
+# Attendre que le réseau soit prêt
+log "Attente du réseau..."
+for i in {1..30}; do
+    if ping -c 1 -W 1 10.0.0.2 > /dev/null 2>&1; then
+        log "✓ Réseau OK"
+        break
+    fi
+    sleep 1
+done
+
+
 # SMB pour Jellyfin
 if ! mount | grep -q "/Users/michel/media-pool"; then
     log "Montage SMB..."
     mkdir -p /Users/michel/media-pool
-    mount_smbfs //michel:trosque@10.0.0.2/media /Users/michel/media-pool
-    [ $? -eq 0 ] && log "✓ SMB monté" || log "✗ Erreur SMB"
+   for attempt in 1 2 3; do
+    if mount_smbfs //michel:trosque@10.0.0.2/media /Users/michel/media-pool 2>/dev/null; then
+        log "✓ SMB monté (tentative $attempt)"
+        break
+    fi
+    log "Tentative $attempt échouée, attente 5s..."
+    sleep 5
+done
+
 else
     log "SMB déjà monté"
 fi

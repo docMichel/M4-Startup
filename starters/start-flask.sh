@@ -11,9 +11,9 @@ if pgrep -f "caption_server.py" > /dev/null; then
 fi
 
 # ATTENDRE QU'IMMICH SOIT PRÊT
-log "Attente d'Immich sur port 3001..."
+log "Attente d'Immich sur port 2283..."
 for i in {1..30}; do
-    if curl -s http://localhost:3001/api/server/version > /dev/null 2>&1; then
+    if curl -s http://localhost:2283/api/server/version > /dev/null 2>&1; then
         log "✓ Immich API disponible"
         break
     fi
@@ -21,7 +21,7 @@ for i in {1..30}; do
 done
 
 # Vérifier si Immich répond vraiment
-if ! curl -s http://localhost:3001/api/server/version > /dev/null 2>&1; then
+if ! curl -s http://localhost:2283/api/server/version > /dev/null 2>&1; then
     log "⚠️  Immich API non disponible, Flask démarrera en mode dégradé"
 fi
 

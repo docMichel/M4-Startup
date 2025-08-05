@@ -16,5 +16,9 @@
     <string>/tmp/startup-all.log</string>
     <key>StandardErrorPath</key>
     <string>/tmp/startup-all.err</string>
+    <key>AbandonProcessGroup</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
 </dict>
 </plist>

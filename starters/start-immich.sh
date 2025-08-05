@@ -28,14 +28,16 @@ su - michel -c 'bash -s' << 'IMMICH_SCRIPT'
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 # Démarrer les services si nécessaire
+# Au lieu de brew services start redis
 if ! redis-cli ping > /dev/null 2>&1; then
-    brew services start redis
+    /opt/homebrew/opt/redis/bin/redis-server /opt/homebrew/etc/redis.conf > /tmp/redis.log 2>&1 &
     sleep 2
 fi
 
+# Lancer PostgreSQL directement sans brew services
 if ! pg_isready > /dev/null 2>&1; then
-    brew services start postgresql@14
-    sleep 3
+    /opt/homebrew/opt/postgresql@14/bin/postgres -D /opt/homebrew/var/postgresql@14 > /tmp/postgresql.log 2>&1 &
+    sleep 5
 fi
 
 # Vérifier/créer le lien symbolique

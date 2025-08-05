@@ -6,7 +6,7 @@
     <string>com.michel.startup</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/michel/M4+startup/startup-all.sh</string>
+        <string>/Users/michel/M4-startup/startup-all.sh</string>
     </array>
     <key>RunAtLoad</key>
     <true/>

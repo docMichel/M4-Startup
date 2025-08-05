@@ -16,6 +16,28 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
+wait_for_service() {
+    local service_name=$1
+    local check_command=$2
+    local max_wait=${3:-20}
+    local elapsed=0
+    
+    while [ $elapsed -lt $max_wait ]; do
+        if eval "$check_command" > /dev/null 2>&1; then
+            log "✓ $service_name OK après ${elapsed}s"
+            return 0
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+        echo -n "." | tee -a "$LOG_FILE"
+    done
+    
+    log ""
+    log "✗ $service_name KO après ${max_wait}s"
+    return 1
+}
+
+
 log "===== DÉMARRAGE STARTUP-ALL ====="
 log "User: $(whoami)"
 log "Script dir: $SCRIPT_DIR"
@@ -28,14 +50,22 @@ log "--- MONTAGES ---"
 sleep 5
 log "--- OLLAMA ---"
 "$SCRIPT_DIR/starters/start-ollama.sh" 2>&1 | tee -a "$LOG_FILE" &
-sleep 5
+wait_for_service "Flask" "curl -s http://localhost:5000/api/health" 30
 
 
 # 3. Lancer les services
 log "--- SERVICES ---"
+
 "$SCRIPT_DIR/starters/start-jellyfin.sh" 2>&1 | tee -a "$LOG_FILE" &
+wait_for_service "Jellyfin" "curl -s http://localhost:8096" 30
+
 "$SCRIPT_DIR/starters/start-immich.sh" 2>&1 | tee -a "$LOG_FILE" &
+wait_for_service "Immich API" "curl -s http://localhost:2283/api/server/ping | grep pong" 60
+
+
 "$SCRIPT_DIR/starters/start-flask.sh" 2>&1 | tee -a "$LOG_FILE" &
+wait_for_service "Flask" "curl -s http://localhost:5000/api/health" 30
+
 
 log "===== FIN STARTUP-ALL ====="
 log "Logs dans: $LOG_DIR"

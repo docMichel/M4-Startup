@@ -1,5 +1,6 @@
 #!/bin/bash
 LOG_FILE="/tmp/startup-logs/immich-$(date +%Y%m%d-%H%M%S).log"
+export HOME=/Users/michel
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 log() {
@@ -21,38 +22,28 @@ if ! mount | grep -q "/Users/michel/mnt/immich-hub"; then
     exit 1
 fi
 
-# TOUT LANCER EN TANT QUE MICHEL avec su -c
-log "Démarrage complet d'Immich..."
-
-# Le script complet dans une seule commande su
-su - michel -c 'bash -s' << 'IMMICH_SCRIPT'
-export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-
-# Démarrer les services si nécessaire
+# Démarrer Redis directement (pas brew services)
 if ! redis-cli ping > /dev/null 2>&1; then
-    brew services start redis
+    log "Démarrage Redis..."
+    su - michel -c "/opt/homebrew/opt/redis/bin/redis-server /opt/homebrew/etc/redis.conf" >> "$LOG_FILE" 2>&1 &
     sleep 2
 fi
 
-if ! pg_isready > /dev/null 2>&1; then
-    brew services start postgresql@14
-    sleep 3
+# Démarrer PostgreSQL directement (pas brew services)
+if ! su - michel -c "pg_isready" > /dev/null 2>&1; then
+    log "Démarrage PostgreSQL..."
+    su - michel -c "/opt/homebrew/opt/postgresql@14/bin/postgres -D /opt/homebrew/var/postgresql@14" >> "$LOG_FILE" 2>&1 &
+    sleep 5
 fi
 
-# Vérifier/créer le lien symbolique
+# Vérifier/créer lien symbolique
 if [ ! -L ~/immich-app/server/upload ] || [ "$(readlink ~/immich-app/server/upload)" != "$HOME/mnt/immich-hub" ]; then
+    log "Création lien symbolique..."
     rm -f ~/immich-app/server/upload
     ln -s ~/mnt/immich-hub ~/immich-app/server/upload
 fi
 
-# Vérifier structure minimale
-cd ~/mnt/immich-hub
-for dir in library upload thumbs encoded-video profile backups; do
-    [ ! -d "$dir" ] && mkdir -p "$dir"
-    [ ! -f "$dir/.immich" ] && touch "$dir/.immich"
-done
-
-# Variables d'environnement
+# Variables d'environnement communes
 export DB_HOSTNAME=localhost
 export REDIS_HOSTNAME=localhost  
 export DB_USERNAME=immich
@@ -61,35 +52,35 @@ export DB_DATABASE_NAME=immich
 export IMMICH_MACHINE_LEARNING_URL=http://localhost:3003
 export IMMICH_BUILD_DATA=/Users/michel/immich-app/server/resources
 export IMMICH_HOST=0.0.0.0
-export DB_VECTOR_EXTENSION=pgvector
 
 # 1. ML
+log "Démarrage ML..."
 cd ~/immich-app/machine-learning
 source ~/immich-ml-venv/bin/activate
-uvicorn immich_ml.main:app --host 0.0.0.0 --port 3003 > /tmp/ml.log 2>&1 &
+uvicorn immich_ml.main:app --host 0.0.0.0 --port 3003 >> "$LOG_FILE" 2>&1 &
 
 # 2. API
+log "Démarrage API..."
 cd ~/immich-app/server
 export IMMICH_PORT=2283
 export IMMICH_WORKERS_EXCLUDE=microservices
-node dist/workers/api.js > /tmp/api.log 2>&1 &
+export DB_VECTOR_EXTENSION=pgvector
+node dist/workers/api.js >> "$LOG_FILE" 2>&1 &
 
 # 3. Microservices
+log "Démarrage Microservices..."
 export IMMICH_WORKERS_INCLUDE=microservices
 unset IMMICH_WORKERS_EXCLUDE
-node dist/main.js > /tmp/microservices.log 2>&1 &
+node dist/main.js >> "$LOG_FILE" 2>&1 &
 
 # 4. Web
+log "Démarrage Web..."
 cd ~/immich-app/web
 export IMMICH_SERVER_URL=http://localhost:2283
-npm run dev -- --host 0.0.0.0 --port 3000 > /tmp/web.log 2>&1 &
-
-IMMICH_SCRIPT
+npm run dev -- --host 0.0.0.0 --port 3000 >> "$LOG_FILE" 2>&1 &
 
 # Attendre et vérifier
-log "Attente du démarrage des services..."
-sleep 20
-
+sleep 10
 if curl -s http://localhost:2283/api/server/ping | grep -q pong; then
     log "✓ Immich API OK"
 else

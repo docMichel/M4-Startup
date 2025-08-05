@@ -12,5 +12,9 @@
     <true/>
     <key>UserName</key>
     <string>root</string>
+    <key>StandardOutPath</key>
+    <string>/tmp/startup-all.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/startup-all.err</string>
 </dict>
 </plist>

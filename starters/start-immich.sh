@@ -6,19 +6,18 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] IMMICH: $1" | tee -a "$LOG_FILE"
 }
 #
-# Vérifier si déjà lancé
-if pgrep -f "uvicorn.*immich_ml.main" > /dev/null; then
-    log "ML déjà en cours"
-    if pgrep -f "node.*dist/main.js" > /dev/null; then
-        log "API déjà en cours"
-        exit 0
-    fi
-fi
 
 # Vérifier montage NFS
 if ! mount | grep -q "/Users/michel/mnt/immich-hub"; then
     log "ERREUR: NFS non monté"
     exit 1
+fi
+
+
+# Vérifier si TOUT est déjà lancé
+if pgrep -f "uvicorn.*immich_ml.main" > /dev/null && pgrep -f "node.*dist/main.js" > /dev/null; then
+    log "Immich déjà complètement en cours"
+    exit 0
 fi
 
 # TOUT LANCER EN TANT QUE MICHEL avec su -c

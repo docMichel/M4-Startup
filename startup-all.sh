@@ -48,10 +48,19 @@ log "--- MONTAGES ---"
 
 # 2. Attendre que les montages soient prêts
 sleep 5
+
 log "--- OLLAMA ---"
 "$SCRIPT_DIR/starters/start-ollama.sh" 2>&1 | tee -a "$LOG_FILE" &
 wait_for_service "Ollama" "curl -s http://localhost:11434/api/tags" 30
 
+# MySQL
+log "--- MYSQL ---"
+if ! pgrep mysqld > /dev/null; then
+    log "Démarrage MySQL..."
+    su - michel -c "/opt/homebrew/opt/mysql/bin/mysqld_safe --datadir=/opt/homebrew/var/mysql" >> "$LOG_FILE" 2>&1 &
+    sleep 5
+fi
+wait_for_service "MySQL" "mysql -u root -pmysqlroot -e 'SELECT 1'" 30
 
 # 3. Lancer les services
 log "--- SERVICES ---"

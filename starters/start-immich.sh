@@ -5,7 +5,7 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] IMMICH: $1" | tee -a "$LOG_FILE"
 }
-
+#
 # Vérifier si déjà lancé
 if pgrep -f "uvicorn.*immich_ml.main" > /dev/null; then
     log "ML déjà en cours"

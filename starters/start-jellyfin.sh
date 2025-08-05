@@ -1,4 +1,16 @@
 #!/bin/bash
+
+#!/bin/bash
+
+# Refuser de s'exécuter en root
+if [ "$EUID" -eq 0 ]; then
+    echo "❌ Ce script ne doit pas être exécuté en root!"
+    echo "Relancement en tant que michel..."
+    exec su - michel -c "$0 $@"
+    exit 1
+fi
+
+
 LOG_FILE="/tmp/startup-logs/jellyfin-$(date +%Y%m%d-%H%M%S).log"
 
 log() {

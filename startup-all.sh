@@ -21,6 +21,10 @@ log "--- MONTAGES ---"
 
 # 2. Attendre que les montages soient prêts
 sleep 5
+log "--- OLLAMA ---"
+"$SCRIPT_DIR/starters/start-ollama.sh" 2>&1 | tee -a "$LOG_FILE" &
+sleep 5
+
 
 # 3. Lancer les services
 log "--- SERVICES ---"

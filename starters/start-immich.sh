@@ -13,15 +13,23 @@ if ! mount | grep -q "/Users/michel/mnt/immich-hub"; then
     exit 1
 fi
 
-
-# Vérifier si TOUT est déjà lancé
-if pgrep -f "uvicorn.*immich_ml.main" > /dev/null && pgrep -f "node.*dist/main.js" > /dev/null; then
+# Remplacer la vérification actuelle par :
+# Vérifier si TOUT est déjà lancé (INCLURE VITE!)
+if pgrep -f "uvicorn.*immich_ml.main" > /dev/null && \
+   pgrep -f "node.*dist/main.js" > /dev/null && \
+   pgrep -f "vite dev" > /dev/null; then
     log "Immich déjà complètement en cours"
     exit 0
 fi
 
+
 # TOUT LANCER EN TANT QUE MICHEL avec su -c
 log "Démarrage complet d'Immich..."
+
+pkill -f "vite dev" 2>/dev/null
+pkill -f "esbuild" 2>/dev/null
+sleep 1
+
 
 # Le script complet dans une seule commande su
 su - michel -c 'bash -s' << 'IMMICH_SCRIPT'

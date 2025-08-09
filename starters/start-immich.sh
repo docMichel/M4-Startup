@@ -15,13 +15,12 @@ fi
 
 # Remplacer la vérification actuelle par :
 # Vérifier si TOUT est déjà lancé (INCLURE VITE!)
-if pgrep -f "uvicorn.*immich_ml.main" > /dev/null && \
-   pgrep -f "node.*dist/main.js" > /dev/null && \
-   pgrep -f "vite dev" > /dev/null; then
-    log "Immich déjà complètement en cours"
+if curl -s http://localhost:2283/api/server/ping 2>/dev/null | grep -q pong && \
+   curl -s http://localhost:3003/ping 2>/dev/null && \
+   curl -s http://localhost:3000 2>/dev/null > /dev/null; then
+    log "Immich déjà complètement actif et fonctionnel"
     exit 0
 fi
-
 
 # TOUT LANCER EN TANT QUE MICHEL avec su -c
 log "Démarrage complet d'Immich..."

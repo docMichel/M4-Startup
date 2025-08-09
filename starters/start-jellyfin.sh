@@ -1,9 +1,19 @@
 #!/bin/bash
 LOG_FILE="/tmp/startup-logs/jellyfin-$(date +%Y%m%d-%H%M%S).log"
 
+mkdir -p /tmp/startup-logs
+touch "$LOG_FILE"
+chmod 666 "$LOG_FILE"  # Accessible en écriture par tous
+
+
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] JELLYFIN: $1" | tee -a "$LOG_FILE"
 }
+# Au début de start-jellyfin.sh, après le log() :
+if [ "$EUID" -eq 0 ]; then
+    # Relancer tout le script en tant que michel
+    exec su - michel -c "$0 $@"
+fi
 
 # Vérifier si déjà lancé
 if pgrep -f "jellyfin" > /dev/null; then

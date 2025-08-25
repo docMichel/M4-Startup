@@ -65,8 +65,8 @@ wait_for_service "MySQL" "mysql -u root -pmysqlroot -e 'SELECT 1'" 30
 # 3. Lancer les services
 log "--- SERVICES ---"
 
-"$SCRIPT_DIR/starters/start-jellyfin.sh" 2>&1 | tee -a "$LOG_FILE" &
-wait_for_service "Jellyfin" "curl -s http://localhost:8096" 30
+#"$SCRIPT_DIR/starters/start-jellyfin.sh" 2>&1 | tee -a "$LOG_FILE" &
+#wait_for_service "Jellyfin" "curl -s http://localhost:8096" 30
 
 "$SCRIPT_DIR/starters/start-immich.sh" 2>&1 | tee -a "$LOG_FILE" &
 wait_for_service "Immich ML" "curl -s http://localhost:3003/ping || curl -s http://localhost:3003/docs | grep -q FastAPI" 30

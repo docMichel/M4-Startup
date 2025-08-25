@@ -50,11 +50,11 @@ fi
 # Vérifier/créer le lien symbolique
 if [ ! -L ~/immich-app/server/upload ] || [ "$(readlink ~/immich-app/server/upload)" != "/Volumes/immich-hub" ]; then
     rm -f ~/immich-app/server/upload
-    ln -s ~/mnt/immich-hub ~/immich-app/server/upload
+    ln -s /Volumes/immich-hub  ~/immich-app/server/upload
 fi
 
 # Vérifier structure minimale
-cd ~/mnt/immich-hub
+cd  /Volumes/immich-hub
 for dir in library upload thumbs encoded-video profile backups; do
     [ ! -d "$dir" ] && mkdir -p "$dir"
     [ ! -f "$dir/.immich" ] && touch "$dir/.immich"

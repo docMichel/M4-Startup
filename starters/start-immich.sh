@@ -8,7 +8,7 @@ log() {
 #
 
 # Vérifier montage NFS
-if ! mount | grep -q "/Volumes/immich-hub"; then
+if ! mount | grep -q "/homre/michel/mnt/immich-hub"; then
     log "ERREUR: NFS non monté"
     exit 1
 fi
@@ -48,13 +48,13 @@ if ! pg_isready > /dev/null 2>&1; then
 fi
 
 # Vérifier/créer le lien symbolique
-if [ ! -L ~/immich-app/server/upload ] || [ "$(readlink ~/immich-app/server/upload)" != "/Volumes/immich-hub" ]; then
+if [ ! -L ~/immich-app/server/upload ] || [ "$(readlink ~/immich-app/server/upload)" != "/homre/michel/mnt/immich-hub" ]; then
     rm -f ~/immich-app/server/upload
-    ln -s /Volumes/immich-hub  ~/immich-app/server/upload
+    ln -s /homre/michel/mnt/immich-hub  ~/immich-app/server/upload
 fi
 
 # Vérifier structure minimale
-cd  /Volumes/immich-hub
+cd  /homre/michel/mnt/immich-hub
 for dir in library upload thumbs encoded-video profile backups; do
     [ ! -d "$dir" ] && mkdir -p "$dir"
     [ ! -f "$dir/.immich" ] && touch "$dir/.immich"
